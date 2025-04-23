@@ -8,14 +8,39 @@
 
 RCT_EXPORT_MODULE()
 
-// 在这里需要初始化微信SDK
+// 在这里初始化微信SDK
 -(instancetype)init {
   self = [super init];
   if (self) {
-    // 你需要在这里设置你自己的微信AppID
-    [WXApi registerApp:@"wx12345678" universalLink:@"https://www.baidu.com"];
+    NSLog(@"RTNWechat模块初始化");
+    
+    BOOL result = [WXApi registerApp:@"wxd477edab60670232" universalLink:@"https://www.baidu.com"];
+
+    NSLog(@"微信SDK自动注册结果: %@", result ? @"成功" : @"失败");
+    
+    // 检查微信是否已安装
+    BOOL isInstalled = [WXApi isWXAppInstalled];
+    NSLog(@"微信是否已安装: %@", isInstalled ? @"是" : @"否");
+    
+    // 检查微信是否支持API
+    BOOL isSupport = [WXApi isWXAppSupportApi];
+    NSLog(@"微信是否支持API: %@", isSupport ? @"是" : @"否");
+  
   }
   return self;
+}
+
+// 确保在主线程执行UI操作
+- (dispatch_queue_t)methodQueue {
+  return dispatch_get_main_queue();
+}
+
+// 检查微信是否已安装
+RCT_EXPORT_METHOD(isWXAppInstalled:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+  BOOL isInstalled = [WXApi isWXAppInstalled];
+  NSLog(@"RTNWechat isWXAppInstalled: %@", isInstalled ? @"已安装" : @"未安装");
+  resolve(@(isInstalled));
 }
 
 // 登录
@@ -47,6 +72,19 @@ RCT_EXPORT_MODULE()
 
 // 支付
 - (void)pay:(NSDictionary *)params resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+  // 检查参数
+  if (!params[@"partnerId"] || !params[@"prepayId"] || !params[@"nonceStr"] || 
+      !params[@"timeStamp"] || !params[@"package"] || !params[@"sign"]) {
+    reject(@"pay_error", @"Missing required payment parameters", nil);
+    return;
+  }
+  
+  // 检查微信是否已安装
+  if (![WXApi isWXAppInstalled]) {
+    reject(@"pay_error", @"WeChat is not installed", nil);
+    return;
+  }
+  
   PayReq *req = [[PayReq alloc] init];
   req.partnerId = params[@"partnerId"];
   req.prepayId = params[@"prepayId"];
@@ -58,6 +96,7 @@ RCT_EXPORT_MODULE()
   [WXApi sendReq:req completion:^(BOOL success) {
     if (success) {
       // 请求发送成功，等待回调
+      resolve(nil); // 添加resolve解决Promise
     } else {
       reject(@"pay_error", @"Failed to send payment request", nil);
     }
@@ -66,53 +105,134 @@ RCT_EXPORT_MODULE()
 
 // 分享链接
 - (void)shareLink:(NSDictionary *)params resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+  // 检查参数
+  if (!params[@"webpageUrl"] || !params[@"title"]) {
+    reject(@"share_error", @"Missing required share link parameters", nil);
+    return;
+  }
+  
+  // 检查微信是否已安装
+  if (![WXApi isWXAppInstalled]) {
+    reject(@"share_error", @"WeChat is not installed", nil);
+    return;
+  }
+  
   WXWebpageObject *webpage = [WXWebpageObject object];
   webpage.webpageUrl = params[@"webpageUrl"];
   
   WXMediaMessage *message = [WXMediaMessage message];
   message.title = params[@"title"];
-  message.description = params[@"description"];
-  // 处理缩略图
-  NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:params[@"thumbUrl"]]];
-  [message setThumbImage:[UIImage imageWithData:imageData]];
-  message.mediaObject = webpage;
+  message.description = params[@"description"] ?: @"";
   
-  SendMessageToWXReq *req = [[SendMessageToWXReq alloc] init];
-  req.bText = NO;
-  req.message = message;
-  req.scene = [params[@"scene"] intValue];
-  
-  [WXApi sendReq:req completion:^(BOOL success) {
-    if (success) {
-      // 请求发送成功，等待回调
-    } else {
-      reject(@"share_error", @"Failed to send share request", nil);
-    }
-  }];
+  // 处理缩略图 - 异步加载以避免阻塞主线程
+  if (params[@"thumbUrl"]) {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+      NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:params[@"thumbUrl"]]];
+      UIImage *thumbImage = imageData ? [UIImage imageWithData:imageData] : nil;
+      
+      dispatch_async(dispatch_get_main_queue(), ^{
+        if (thumbImage) {
+          [message setThumbImage:thumbImage];
+        }
+        
+        message.mediaObject = webpage;
+        
+        SendMessageToWXReq *req = [[SendMessageToWXReq alloc] init];
+        req.bText = NO;
+        req.message = message;
+        req.scene = [params[@"scene"] intValue];
+        
+        [WXApi sendReq:req completion:^(BOOL success) {
+          if (success) {
+            // 请求发送成功，等待回调
+            resolve(nil); // 添加resolve解决Promise
+          } else {
+            reject(@"share_error", @"Failed to send share request", nil);
+          }
+        }];
+      });
+    });
+  } else {
+    // 无缩略图的情况
+    message.mediaObject = webpage;
+    
+    SendMessageToWXReq *req = [[SendMessageToWXReq alloc] init];
+    req.bText = NO;
+    req.message = message;
+    req.scene = [params[@"scene"] intValue];
+    
+    [WXApi sendReq:req completion:^(BOOL success) {
+      if (success) {
+        // 请求发送成功，等待回调
+        resolve(nil); // 添加resolve解决Promise
+      } else {
+        reject(@"share_error", @"Failed to send share request", nil);
+      }
+    }];
+  }
 }
 
 // 分享图片
 - (void)shareImage:(NSDictionary *)params resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-  WXImageObject *imageObject = [WXImageObject object];
-  NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:params[@"image"]]];
-  imageObject.imageData = imageData;
+  // 检查参数
+  if (!params[@"image"]) {
+    reject(@"share_error", @"Missing image URL", nil);
+    return;
+  }
   
-  WXMediaMessage *message = [WXMediaMessage message];
-  message.mediaObject = imageObject;
-  [message setThumbImage:[UIImage imageWithData:imageData]];
+  // 检查微信是否已安装
+  if (![WXApi isWXAppInstalled]) {
+    reject(@"share_error", @"WeChat is not installed", nil);
+    return;
+  }
   
-  SendMessageToWXReq *req = [[SendMessageToWXReq alloc] init];
-  req.bText = NO;
-  req.message = message;
-  req.scene = [params[@"scene"] intValue];
-  
-  [WXApi sendReq:req completion:^(BOOL success) {
-    if (success) {
-      // 请求发送成功，等待回调
-    } else {
-      reject(@"share_error", @"Failed to send share request", nil);
+  // 异步加载图片
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:params[@"image"]]];
+    
+    if (!imageData) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        reject(@"share_error", @"Failed to load image", nil);
+      });
+      return;
     }
-  }];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+      WXImageObject *imageObject = [WXImageObject object];
+      imageObject.imageData = imageData;
+      
+      WXMediaMessage *message = [WXMediaMessage message];
+      message.mediaObject = imageObject;
+      
+      // 创建缩略图
+      UIImage *image = [UIImage imageWithData:imageData];
+      UIImage *thumbImage = [self thumbnailWithImage:image size:CGSizeMake(100, 100)];
+      [message setThumbImage:thumbImage];
+      
+      SendMessageToWXReq *req = [[SendMessageToWXReq alloc] init];
+      req.bText = NO;
+      req.message = message;
+      req.scene = [params[@"scene"] intValue];
+      
+      [WXApi sendReq:req completion:^(BOOL success) {
+        if (success) {
+          // 请求发送成功，等待回调
+          resolve(nil); // 添加resolve解决Promise
+        } else {
+          reject(@"share_error", @"Failed to send share request", nil);
+        }
+      }];
+    });
+  });
+}
+
+// 创建缩略图方法
+- (UIImage *)thumbnailWithImage:(UIImage *)image size:(CGSize)size {
+  UIGraphicsBeginImageContextWithOptions(size, NO, 0.0);
+  [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+  UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+  return newImage;
 }
 
 // 处理微信回调

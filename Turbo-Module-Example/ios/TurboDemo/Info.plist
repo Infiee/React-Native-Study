@@ -22,11 +22,29 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+   <key>CFBundleURLTypes</key>
+   <array>
+       <dict>
+           <key>CFBundleTypeRole</key>
+           <string>Editor</string>
+           <key>CFBundleURLName</key>
+           <string>weixin</string>
+           <key>CFBundleURLSchemes</key>
+           <array>
+               <string>wxd477edab60670232</string>
+           </array>
+       </dict>
+   </array>
+   <key>LSApplicationQueriesSchemes</key>
+   <array>
+       <string>weixin</string>
+       <string>wechat</string>
+       <string>weixinULAPI</string>
+   </array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-	  <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>

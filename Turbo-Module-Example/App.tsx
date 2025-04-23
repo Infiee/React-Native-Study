@@ -179,7 +179,6 @@ function WechatView() {
       // 实际结果将在onAuthResponse回调中处理
     } catch (error) {
       setLoginResult(`登录失败: ${error}`);
-      Alert.alert('登录失败', String(error));
     }
   };
 

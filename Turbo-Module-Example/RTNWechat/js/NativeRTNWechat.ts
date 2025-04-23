@@ -2,6 +2,9 @@ import { TurboModule, TurboModuleRegistry } from "react-native";
 import type { EventEmitter } from 'react-native/Libraries/Types/CodegenTypes';
 
 export interface Spec extends TurboModule {
+  // 检查微信是否已安装
+  isWXAppInstalled(): Promise<boolean>;
+  
   // 微信登录
   login(): Promise<{
     code: string;
