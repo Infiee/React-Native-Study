@@ -13,7 +13,8 @@
     "react": "19.0.0",
     "react-native": "0.79.0",
     "rtn-calculator": "file:RTNCalculator",
-    "rtn-localstorage": "file:RTNLocalStorage"
+    "rtn-localstorage": "file:RTNLocalStorage",
+    "rtn-wechat": "file:RTNWechat"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

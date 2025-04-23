@@ -1702,7 +1702,33 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - rtn-wechat (0.0.1):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - WechatOpenSDK (~> 2.0.2)
+    - Yoga
   - SocketRocket (0.7.1)
+  - WechatOpenSDK (2.0.4)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -1779,11 +1805,13 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - rtn-calculator (from `../node_modules/rtn-calculator`)
   - rtn-localstorage (from `../node_modules/rtn-localstorage`)
+  - rtn-wechat (from `../node_modules/rtn-wechat`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
   trunk:
     - SocketRocket
+    - WechatOpenSDK
 
 EXTERNAL SOURCES:
   boost:
@@ -1929,6 +1957,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/rtn-calculator"
   rtn-localstorage:
     :path: "../node_modules/rtn-localstorage"
+  rtn-wechat:
+    :path: "../node_modules/rtn-wechat"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2004,7 +2034,9 @@ SPEC CHECKSUMS:
   ReactCommon: 1257efa9d0b07517d8b79bb4055eaefac1204807
   rtn-calculator: e89cab69a43fe2a50968c88def7bb126e207735f
   rtn-localstorage: aee14bde406775970a6efeec0477a00f43f37099
+  rtn-wechat: ea882d6d3afa6716bedd37563a758525ba57d846
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  WechatOpenSDK: 290989072e87b79d52225a01bb4e5e58f6f88593
   Yoga: 9773f1327b258fa449988c2e42fbb7cbdf655d96
 
 PODFILE CHECKSUM: 9de13c0d420aa4b86b8dd45c5f932466e813909b
