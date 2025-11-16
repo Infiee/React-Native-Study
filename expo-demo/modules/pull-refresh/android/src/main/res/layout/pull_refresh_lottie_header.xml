@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="96dp"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/pull_refresh_lottie_view"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        app:lottie_fileName="pull_refresh_lottie.json"
+        app:lottie_autoPlay="false"
+        app:lottie_loop="true" />
+
+</LinearLayout>
+
+
