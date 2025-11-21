@@ -12,6 +12,11 @@ class PullRefreshView: ExpoView {
   private var isRefreshing = false
   private var isLoadingMore = false
   
+  // 防抖时间戳（添加防护机制）
+  private var lastRefreshTime: TimeInterval = 0
+  private var lastLoadMoreTime: TimeInterval = 0
+  private let minTriggerInterval: TimeInterval = 0.3 // 300ms最小触发间隔
+  
   // 用于追踪状态变化的key
   private var currentRefreshingKey: String = ""
   private var currentLoadingKey: String = ""
@@ -84,11 +89,35 @@ class PullRefreshView: ExpoView {
     // 设置下拉刷新
     let header = MJRefreshNormalHeader { [weak self] in
       guard let self = self else { return }
-      DispatchQueue.main.async {
-        self.syncQueue.async {
-          self.isRefreshing = true
+      
+      // 防抖检查：防止短时间内重复触发
+      let currentTime = Date().timeIntervalSince1970
+      if currentTime - self.lastRefreshTime < self.minTriggerInterval {
+        print("⚠️ PullRefresh: 刷新触发过快，忽略本次触发（距上次 \(Int((currentTime - self.lastRefreshTime) * 1000))ms）")
+        DispatchQueue.main.async {
+          self.targetScrollView?.mj_header?.endRefreshing()
         }
-        self.onRefresh([:])
+        return
+      }
+      
+      DispatchQueue.main.async {
+        // 状态检查：如果已经在刷新中，跳过
+        var shouldTrigger = false
+        self.syncQueue.sync {
+          if !self.isRefreshing {
+            self.isRefreshing = true
+            self.lastRefreshTime = currentTime
+            shouldTrigger = true
+          }
+        }
+        
+        if shouldTrigger {
+          print("✅ PullRefresh: 触发下拉刷新")
+          self.onRefresh([:])
+        } else {
+          print("⚠️ PullRefresh: 已在刷新中，忽略重复触发")
+          self.targetScrollView?.mj_header?.endRefreshing()
+        }
       }
     }
     header.lastUpdatedTimeLabel?.isHidden = true
@@ -108,11 +137,35 @@ class PullRefreshView: ExpoView {
     // 设置上拉加载
     let footer = MJRefreshAutoNormalFooter { [weak self] in
       guard let self = self else { return }
-      DispatchQueue.main.async {
-        self.syncQueue.async {
-          self.isLoadingMore = true
+      
+      // 防抖检查：防止短时间内重复触发
+      let currentTime = Date().timeIntervalSince1970
+      if currentTime - self.lastLoadMoreTime < self.minTriggerInterval {
+        print("⚠️ PullRefresh: 加载触发过快，忽略本次触发（距上次 \(Int((currentTime - self.lastLoadMoreTime) * 1000))ms）")
+        DispatchQueue.main.async {
+          self.targetScrollView?.mj_footer?.endRefreshing()
         }
-        self.onLoadMore([:])
+        return
+      }
+      
+      DispatchQueue.main.async {
+        // 状态检查：如果已经在加载中，跳过
+        var shouldTrigger = false
+        self.syncQueue.sync {
+          if !self.isLoadingMore {
+            self.isLoadingMore = true
+            self.lastLoadMoreTime = currentTime
+            shouldTrigger = true
+          }
+        }
+        
+        if shouldTrigger {
+          print("✅ PullRefresh: 触发上拉加载")
+          self.onLoadMore([:])
+        } else {
+          print("⚠️ PullRefresh: 已在加载中，忽略重复触发")
+          self.targetScrollView?.mj_footer?.endRefreshing()
+        }
       }
     }
     footer.stateLabel?.textColor = .gray

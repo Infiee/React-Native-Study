@@ -14,7 +14,8 @@ export default function PullRefreshDemo() {
   const [data, setData] = useState<DataItem[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  // 使用 ref 存储 loading 状态，避免闭包陷阱
+  const isLoadingRef = useRef(false);
 
   // 初次加载数据
   useEffect(() => {
@@ -23,16 +24,23 @@ export default function PullRefreshDemo() {
 
   // 初始加载
   const loadInitialData = async () => {
+    if (isLoadingRef.current) {
+      console.log('⚠️ 初始加载已在进行中，跳过');
+      return;
+    }
+
     try {
-      setIsLoading(true);
+      isLoadingRef.current = true;
+      console.log('📦 开始初始加载...');
       const newData = await mockFetchData(1);
       setData(newData);
       setPage(1);
       setHasMore(true);
+      console.log('✅ 初始加载完成');
     } catch (error) {
-      console.error('初始加载失败:', error);
+      console.error('❌ 初始加载失败:', error);
     } finally {
-      setIsLoading(false);
+      isLoadingRef.current = false;
     }
   };
 
@@ -56,24 +64,28 @@ export default function PullRefreshDemo() {
 
   // 下拉刷新
   const handleRefresh = async () => {
-    // 防止重复加载
-    if (isLoading) return;
-    
+    // 防止重复加载 - 使用 ref 确保获取最新状态
+    if (isLoadingRef.current) {
+      console.log('⚠️ 正在加载中，跳过刷新请求');
+      pullRefreshRef.current?.endRefresh();
+      return;
+    }
+
     try {
-      setIsLoading(true);
-      console.log('开始刷新...');
+      isLoadingRef.current = true;
+      console.log('🔄 开始刷新...');
       const newData = await mockFetchData(1);
       setData(newData);
       setPage(1);
       setHasMore(true);
-      
+
       // 重置没有更多数据状态
       pullRefreshRef.current?.resetNoMoreData();
-      console.log('刷新完成');
+      console.log('✅ 刷新完成');
     } catch (error) {
-      console.error('刷新失败:', error);
+      console.error('❌ 刷新失败:', error);
     } finally {
-      setIsLoading(false);
+      isLoadingRef.current = false;
       // 结束刷新动画
       pullRefreshRef.current?.endRefresh();
     }
@@ -81,34 +93,41 @@ export default function PullRefreshDemo() {
 
   // 上拉加载更多
   const handleLoadMore = async () => {
-    // 防止重复加载
-    if (isLoading || !hasMore) {
-      console.log('加载中或没有更多数据');
+    // 防止重复加载 - 使用 ref 确保获取最新状态
+    if (isLoadingRef.current) {
+      console.log('⚠️ 正在加载中，跳过加载更多请求');
+      pullRefreshRef.current?.endLoadMore();
+      return;
+    }
+
+    if (!hasMore) {
+      console.log('⚠️ 没有更多数据');
+      pullRefreshRef.current?.noMoreData();
       return;
     }
 
     try {
-      setIsLoading(true);
-      console.log('开始加载更多...');
+      isLoadingRef.current = true;
+      console.log('📥 开始加载更多...');
       const nextPage = page + 1;
       const newData = await mockFetchData(nextPage);
-      
+
       if (nextPage >= 5) {
         // 模拟：第5页后没有更多数据
-        console.log('已加载全部数据');
+        console.log('✅ 已加载全部数据');
         setHasMore(false);
         pullRefreshRef.current?.noMoreData();
       } else {
         setData([...data, ...newData]);
         setPage(nextPage);
-        console.log(`加载完成，当前第 ${nextPage} 页`);
+        console.log(`✅ 加载完成，当前第 ${nextPage} 页`);
         pullRefreshRef.current?.endLoadMore();
       }
     } catch (error) {
-      console.error('加载更多失败:', error);
+      console.error('❌ 加载更多失败:', error);
       pullRefreshRef.current?.endLoadMore();
     } finally {
-      setIsLoading(false);
+      isLoadingRef.current = false;
     }
   };
 
@@ -178,7 +197,7 @@ export default function PullRefreshDemo() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* 标题栏 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>PullRefresh 示例</Text>
