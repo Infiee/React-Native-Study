@@ -1,0 +1,13 @@
+# Editor configuration, see http://editorconfig.org
+
+# 顶级配置文件
+root = true
+
+# 所有文件
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+end_of_line = lf
+trim_trailing_whitespace = true
+insert_final_newline = true
