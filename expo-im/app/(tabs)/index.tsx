@@ -7,17 +7,21 @@ import NetInfo from '@react-native-community/netinfo';
 import TencentCloudChat from '@tencentcloud/chat';
 import TIMUploadPlugin from 'tim-upload-plugin';
 // import * as NetInfo from 'expo-network';
+import { imConfig, log } from '@/config';
+import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 let options = {
-  SDKAppID: 1400656477 // 接入时需要将0替换为您的即时通信 IM 应用的 SDKAppID
+  SDKAppID: imConfig.SDKAppID
 };
 
 export default function HomeScreen() {
   const [netState, setNetState] = useState('')
 
   useEffect(() => {
+    log.debug("SDKAppID=====", options)
+
     // 创建 SDK 实例，`TencentCloudChat.create()`方法对于同一个 `SDKAppID` 只会返回同一份实例
     let chat = TencentCloudChat.create(options); // SDK 实例通常用 chat 表示
 
@@ -40,6 +44,16 @@ export default function HomeScreen() {
     <SafeAreaView>
       <ThemedView>
         <ThemedText>网络状态：{netState}</ThemedText>
+      </ThemedView>
+      <Link href="/user/1">用户详情</Link>
+
+      <ThemedView className='flex flex-row bg-slate-100'>
+        <ThemedView>
+          <ThemedText>测试1</ThemedText>
+        </ThemedView>
+        <ThemedView>
+          <ThemedText>测试2</ThemedText>
+        </ThemedView>
       </ThemedView>
     </SafeAreaView>
   );
