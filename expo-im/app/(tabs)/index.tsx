@@ -46,15 +46,6 @@ export default function HomeScreen() {
         <ThemedText>网络状态：{netState}</ThemedText>
       </ThemedView>
       <Link href="/user/1">用户详情</Link>
-
-      <ThemedView className='flex flex-row bg-slate-100'>
-        <ThemedView>
-          <ThemedText>测试1</ThemedText>
-        </ThemedView>
-        <ThemedView>
-          <ThemedText>测试2</ThemedText>
-        </ThemedView>
-      </ThemedView>
     </SafeAreaView>
   );
 }
