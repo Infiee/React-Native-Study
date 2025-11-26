@@ -39,7 +39,7 @@ export const useUserProfile = () => {
       log.info('User profile fetched successfully', { userId: profile.id });
       return profile;
     },
-    ...cachePresets.normal, // 用户资料使用普通缓存策略
+    // ...cachePresets.normal, // 用户资料使用普通缓存策略
   });
 
   // 同步 React Query 数据到 Zustand Store

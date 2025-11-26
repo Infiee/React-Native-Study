@@ -12,9 +12,9 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // 失败时重试次数
-      retry: 2,
+      retry: 1,
       // 重试延迟（毫秒）
-      retryDelay: 1000,
+      retryDelay: 3000,
       // 数据缓存时间（毫秒），5分钟后清理不活跃的缓存
       gcTime: 5 * 60 * 1000,
       // 30秒内认为数据是新鲜的，不重新请求
@@ -28,9 +28,9 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       // mutation 失败时重试次数
-      retry: 2,
+      retry: 1,
       // 重试延迟（毫秒）
-      retryDelay: 1000,
+      retryDelay: 3000,
     },
   },
 });
